@@ -1,4 +1,4 @@
-### Noswear Project shocking board firmware (Keil uVision)
+### Noswear Project (shocking watch profanity tracking) shocking board firmware (Keil uVision)
 
 This firmware handles commands from android app via BLE to control shocking circuit. 
 
