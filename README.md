@@ -1,10 +1,18 @@
-### Noswear Project (shocking watch profanity tracking) shocking board firmware (Keil uVision)
+# Noswear project (shocking watch profanity tracking)  
+
+[Noswear_Java](https://github.com/StarrLucky/Noswear_Java): voice recognition app  
+
+[Noswear_Android_Client](https://github.com/StarrLucky/Noswear_Android_Client): sending commands to NFR51 board over BLE  
+
+--- 
+
+## Noswear Project (shocking watch profanity tracking) shocking board firmware (Keil uVision)
 
 This firmware handles commands from android app via BLE to control shocking circuit. 
 
 MCU: NRF51822, Custom design board.  
 
-Board Schematics: [EasyEDA](https://easyeda.com/fxndstrs/211221312312).
+Board Schematics: [EasyEDA](https://easyeda.com/fxndstrs/Noswear_Shocking_Board).
 
 Board have led pins - 12 for advertising/device status and 13 to indicate recieving of shocking command. Pin 6 - shocking pin which connected to ne555 timer.  
 
