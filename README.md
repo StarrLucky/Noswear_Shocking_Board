@@ -24,6 +24,10 @@ RF part design of this board wasn't tested with SWR meter and other special equi
 
 Board supply voltage range: 3.9-13.2V.  
 
-Note that this voltage will be applied to primary of HV transformer. 
+Note that this voltage will be applied to primary of HV transformer.   
 
+----
 
+  ![Noswear shocking watch pcb](https://github.com/StarrLucky/Noswear_Shocking_Board/blob/master/pcb.jpg)
+
+----
