@@ -41,6 +41,7 @@
 #define CONNECTED_LED_PIN               BSP_LED_1_MASK                              /**< Is on when device has connected. */
 
 #define LED_SHOCK 12
+#define SHOCK_MAX_ON_TIME_MS            2000                                        /**< Hard upper bound on how long the shocking circuit may stay energised, in ms. */
 #define LEDBUTTON_LED_PIN               12                             						  /**< LED to be toggled with the help of the LED Button Service. */
 #define LEDBUTTON_BUTTON_PIN            BSP_BUTTON_0                                /**< Button that will trigger the notification event with the LED Button Service */
 
@@ -68,6 +69,7 @@
 
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 static ble_lbs_t                        m_lbs;                                      /**< LED Button Service instance. */
+APP_TIMER_DEF(m_shock_timer_id);                                                    /**< Watchdog that forces the shocking circuit off after SHOCK_MAX_ON_TIME_MS. */
 
 
 /**@brief Function for assert macro callback.
