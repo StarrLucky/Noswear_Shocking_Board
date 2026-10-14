@@ -15,6 +15,7 @@ MCU: NRF51822, Custom design board.
 Board Schematics: [EasyEDA](https://easyeda.com/fxndstrs/Noswear_Shocking_Board).
 
 Board have led pins - 12 for advertising/device status and 13 to indicate recieving of shocking command. Pin 6 - shocking pin which connected to ne555 timer.  
+All three are active high. Pin 6 drives RST (pin 4) of the NE555, which is held low by a 10k pull-down (R24), so the circuit stays idle while the MCU pin is still an input.  
 
 PCB consists MCP1702 IC (3.3V supply for NRF51822 chip),
 LM555 low voltage supply timer IC to drive 8205A MOSFET at ~60Hz.    
@@ -28,6 +29,6 @@ Note that this voltage will be applied to primary of HV transformer.
 
 ----
 
-  ![Noswear shocking watch pcb](https://github.com/StarrLucky/Noswear_Shocking_Board/blob/master/pcb.jpg)
+  ![Noswear shocking watch pcb](https://raw.githubusercontent.com/StarrLucky/Noswear_Shocking_Board/master/pcb.jpg)
 
 ----

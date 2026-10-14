@@ -13,13 +13,16 @@
 #define BOARDCUSTOM
 
 
-// LEDs definitions for PCA10028
+// LED definitions for the Noswear shocking board. The SDK indices below do not
+// line up with the schematic designators, so both are spelled out:
+//   LED_1 = P0.12 = U1 pin 18 = schematic LED2 - advertising / device status
+//   LED_2 = P0.13 = U1 pin 19 = schematic LED1 - shocking command indicator
 #define LEDS_NUMBER    2
 
-#define LED_START      1
-#define LED_1          1
-#define LED_2          2
-#define LED_STOP       2
+#define LED_START      12
+#define LED_1          12
+#define LED_2          13
+#define LED_STOP       13
 
 #define LEDS_LIST { LED_1, LED_2}
 
@@ -32,9 +35,13 @@
 
 
 #define LEDS_MASK      (BSP_LED_0_MASK | BSP_LED_1_MASK)
-/* all LEDs are lit when GPIO is low */
-#define LEDS_INV_MASK  LEDS_MASK
+/* Both LEDs have their anode on the GPIO and their cathode on a 200R to GND,
+   so they are lit when the GPIO is high: no inverted LEDs on this board. */
+#define LEDS_INV_MASK  0
 
+/* NOTE: this board carries no buttons at all - P0.03 and P0.04 are left
+   unconnected in the schematic. The definitions below only exist to keep the
+   stock app_button/bsp code from the SDK example compiling. */
 #define BUTTONS_NUMBER 2
 
 #define BUTTON_START   3
@@ -52,7 +59,7 @@
 #define BSP_BUTTON_1_MASK (1<<BSP_BUTTON_1)
 
 
-#define BUTTONS_MASK   0x001E0000
+#define BUTTONS_MASK   (BSP_BUTTON_0_MASK | BSP_BUTTON_1_MASK)
 
 #define RX_PIN_NUMBER  11
 #define TX_PIN_NUMBER  9
