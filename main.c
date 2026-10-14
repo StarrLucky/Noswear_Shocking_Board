@@ -40,9 +40,8 @@
 #define ADVERTISING_LED_PIN             BSP_LED_0_MASK                              /**< Is on when device is advertising. */
 #define CONNECTED_LED_PIN               BSP_LED_1_MASK                              /**< Is on when device has connected. */
 
-#define LED_SHOCK 12
+#define LED_SHOCK                       6                                           /**< Drives RST (pin 4) of the NE555. */
 #define SHOCK_MAX_ON_TIME_MS            2000                                        /**< Hard upper bound on how long the shocking circuit may stay energised, in ms. */
-#define LEDBUTTON_LED_PIN               12                             						  /**< LED to be toggled with the help of the LED Button Service. */
 #define LEDBUTTON_BUTTON_PIN            BSP_BUTTON_0                                /**< Button that will trigger the notification event with the LED Button Service */
 
 #define DEVICE_NAME                     "Nordic_Blinky"                             /**< Name of device. Will be included in the advertising data. */
@@ -100,14 +99,83 @@ static void leds_init(void)
 }
 
 
+/**@brief Function for putting the shocking circuit into its idle state.
+ *
+ * @details LED_SHOCK drives RST on the NE555, which is active low: holding it low keeps the
+ *          timer in reset and its output off, so the MOSFET and the HV transformer stay idle.
+ *          Safe to call at any time, including when no shock is in progress.
+ */
+static void shock_off(void)
+{
+    uint32_t err_code;
+
+    nrf_gpio_pin_clear(LED_SHOCK);
+
+    err_code = app_timer_stop(m_shock_timer_id);
+    APP_ERROR_CHECK(err_code);
+}
+
+
+/**@brief Time-out handler for the maximum shock duration.
+ */
+static void shock_timeout_handler(void * p_context)
+{
+    UNUSED_PARAMETER(p_context);
+
+    nrf_gpio_pin_clear(LED_SHOCK);
+}
+
+
+/**@brief Function for energising the shocking circuit.
+ *
+ * @details Releasing RST lets the NE555 free-run at ~60 Hz and drive the MOSFET.
+ *          The watchdog is armed before the output is asserted, so a failure to arm it can
+ *          never leave the circuit running unsupervised. app_timer_start() ignores a start on
+ *          an already running timer, which is deliberate here: the time limit is measured from
+ *          the first assertion and cannot be extended by repeating the write.
+ */
+static void shock_on(void)
+{
+    uint32_t err_code;
+
+    err_code = app_timer_start(m_shock_timer_id,
+                               APP_TIMER_TICKS(SHOCK_MAX_ON_TIME_MS, APP_TIMER_PRESCALER),
+                               NULL);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_gpio_pin_set(LED_SHOCK);
+}
+
+
+/**@brief Function for configuring the shocking circuit output.
+ *
+ * @details R24 pulls RST to ground, so the circuit is already idle while the pin is still an
+ *          input. Driving the pin low before turning it into an output keeps it that way
+ *          across the transition. Must run before the SoftDevice can deliver a write to the
+ *          LED characteristic.
+ */
+static void shock_init(void)
+{
+    nrf_gpio_pin_clear(LED_SHOCK);
+    nrf_gpio_cfg_output(LED_SHOCK);
+}
+
+
 /**@brief Function for the Timer initialization.
  *
  * @details Initializes the timer module.
  */
 static void timers_init(void)
 {
+    uint32_t err_code;
+
     // Initialize timer module, making it use the scheduler
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
+
+    err_code = app_timer_create(&m_shock_timer_id,
+                                APP_TIMER_MODE_SINGLE_SHOT,
+                                shock_timeout_handler);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -158,7 +226,7 @@ static void advertising_init(void)
     memset(&advdata, 0, sizeof(advdata));
 
     advdata.name_type          = BLE_ADVDATA_FULL_NAME;
-    advdata.include_appearance = true;
+    advdata.include_appearance = false;
     advdata.flags              = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
 
@@ -178,15 +246,15 @@ static void advertising_init(void)
  */
 static void led_write_handler(ble_lbs_t * p_lbs, uint8_t led_state)
 {
+    UNUSED_PARAMETER(p_lbs);
+
     if (led_state)
     {
-            
-       nrf_gpio_pin_clear(LED_SHOCK);  
+        shock_on();
     }
     else
     {
-			nrf_gpio_pin_set(LED_SHOCK);
-       
+        shock_off();
     }
 }
 
@@ -303,6 +371,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
+            // The peer can no longer send the matching "off" write, so stop the circuit here.
+            shock_off();
+
             LEDS_OFF(CONNECTED_LED_PIN);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
@@ -447,6 +518,7 @@ static void power_manage(void)
 int main(void)
 {
     // Initialize.
+    shock_init();
     leds_init();
     timers_init();
     buttons_init();
@@ -458,10 +530,6 @@ int main(void)
 
     // Start execution.
     advertising_start();
-	
-				
-	nrf_gpio_cfg_output(LED_SHOCK);
-//	nrf_gpio_pin_set(LED_SHOCK);
 
     // Enter main loop.
     for (;;)
